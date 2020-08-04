@@ -1,0 +1,275 @@
+<html>
+
+<head>
+</head>
+
+<body>
+
+	<canvas style="margin-top:30px;display: block ;padding-left: 0; padding-right: 0; margin-left: auto; margin-right: auto;" id="myCanvas" width="520" height="520">
+		
+	</canvas>
+	<br>
+	<marquee>Mission Chicken invaders/marquee>
+
+	<script>
+		// Made with love by Rishabh Jain !
+		// Adding fire 
+		// Generate in 300 ms
+		// Add in update !
+
+		var canvas = document.getElementById("myCanvas");
+		var ctx = canvas.getContext("2d");
+
+		var counter = 0;
+
+		function drawObject(object){
+			//Find current index of image to be used.
+			var currentImageIndex = counter%object.images.length;
+			//Access image from array of images
+			var currentImage = object.images[currentImageIndex];
+			//Draw of canvas
+			ctx.drawImage(currentImage,object.x-(object.width/2),object.y-(object.height/2),object.width,object.height);
+		}
+
+		var WIDTH = 520;
+		var HEIGHT = 520;
+
+		var fires = [] ;	
+		var lastFireAt = new Date().getTime();
+		var fireImage = new Image(); fireImage.src = ["https://i.imgur.com/pPvOuhq.png"];
+		function addFire(x,y){
+			var fire = {};
+			fire.images = [fireImage];
+			fire.x = x;
+			fire.y = y;
+			fire.width = 10;
+			fire.height = 10;
+			fire.speedX = 0;
+			fire.speedY = -7;
+			fire.active = true;			
+			fire.move = function(){
+				this.y += this.speedY; 
+				if( this.y <= 0 ){
+					this.active = false;
+				}
+			}
+			fires.push(fire);
+		}
+
+		function drawAndMoveFires(){
+			var temp = [];
+			for(var i=0;i<fires.length;i++){
+				fires[i].move();
+				drawObject(fires[i]);
+				// Only add active bullets				
+				if(fires[i].active){
+					temp.push(fires[i]);
+				}
+			}
+			fires = temp;
+		}
+
+		var bullets = [] ;	
+		var bulletImage1 = new Image(); bulletImage1.src = ["https://i.imgur.com/dM81aDs.gif"];
+		var bulletImage2 = new Image(); bulletImage2.src = ["https://i.imgur.com/NyaUjNn.gif"];
+
+		function addBullet(x,y){
+			var bullet = {};
+			bullet.images = [bulletImage1,bulletImage2];
+			bullet.x = x;
+			bullet.y = y;
+			bullet.width = 50;
+			bullet.height = 50;
+			bullet.speedX = 0;
+			bullet.speedY = 7;
+			bullet.active = true;			
+			bullet.move = function(){
+				this.y += this.speedY; 
+				if( this.y >=HEIGHT ){
+					this.active = false;
+				}
+			}
+			bullets.push(bullet);
+		}
+
+		function drawAndMoveBullets(){
+			var temp = [];
+			for(var i=0;i<bullets.length;i++){
+				bullets[i].move();
+				drawObject(bullets[i]);
+				// Only add active bullets				
+				if(bullets[i].active){
+					temp.push(bullets[i]);
+				}
+			}
+			bullets = temp;
+		}
+
+
+		var ships = [];
+		var shipImages = [];
+		var shipUrls = ["https://i.imgur.com/gLLRj2T.png",
+		"https://i.imgur.com/ZhshGO4.png",
+		"https://i.imgur.com/E0wiPJC.png",
+		"https://i.imgur.com/WmsDf2l.png",
+		"https://i.imgur.com/EjfY1iE.png",
+		"https://i.imgur.com/t3VGw8g.png",
+		"https://i.imgur.com/d6OT3qt.png"];
+
+
+		for(var i = 0;i< shipUrls.length ;i++){
+			var shipImage = new Image();
+			shipImage.src = shipUrls[i];
+			shipImages.push(shipImage);
+		}
+
+
+		for(var i=0;i<5;i++){
+			var ship = {};
+			ship.images = shipImages;
+			ship.x = (Math.random()*1000000)%WIDTH;
+			ship.y = 0;
+			ship.width = 80;
+			ship.height = 80;
+			ship.speedX = 1 + Math.random()*3;
+			ship.speedY = 0.7;
+
+			ship.move = function(){
+				if( this.x >= WIDTH && this.speedX >0 ){
+					// now move in left
+					this.speedX = - this.speedX;
+				}
+				if( this.x <=0 && this.speedX < 0 ){
+					// now move in right
+					this.speedX = - this.speedX;
+				}
+				this.x += this.speedX;
+				this.y += this.speedY;
+
+				// Reappear
+				if(this.y>=600) {
+					this.y = -50;
+				} 
+			}
+
+			ship.fireBullet = function(){
+				if(Math.random()<0.01)
+				addBullet(this.x,this.y);
+			}
+
+			ships.push(ship);			
+		}
+
+
+		var alienImages = [];
+		var alienImageUrls = ["https://i.imgur.com/tvJOu59.png","https://i.imgur.com/e1pkJRF.png","https://i.imgur.com/aRumf1r.png","https://i.imgur.com/jjOPpWL.png","https://i.imgur.com/hsdEpsM.png","https://i.imgur.com/u5eNyl8.png"];
+		 
+		for( var i=0; i<alienImageUrls.length ; i++ ){
+			var image = new Image();
+			image.src = alienImageUrls[i];
+			alienImages.push(image);
+		}
+
+		var alien = {};	alien.images = alienImages ; alien.width = 100; alien.height = 100; alien.x=300; alien.y=HEIGHT-100; alien.speed = 7;
+
+		var keyMap = {};
+		keyMap[38]	= { name :"up",		active:false , onactive: function() { if(alien.y>0){alien.y-=alien.speed;} } };
+		keyMap[40]	= { name :"down",	active:false , onactive: function() { if(alien.y<520){alien.y+=alien.speed; } }};
+		keyMap[37]	= { name :"left",	active:false , onactive: function() { if(alien.x>0){alien.x-=alien.speed; } } };
+		keyMap[39]	= { name :"right",	active:false , onactive: function() { if(alien.x<520){alien.x+=alien.speed; } }};
+		keyMap[32]	= { name :"space", 	active:false , onactive: function() { 
+																				if(new Date().getTime() - lastFireAt>300) { 
+																					lastFireAt= new Date().getTime() ; 
+																					addFire(alien.x,alien.y-30); 
+																				} 
+																			}
+		};
+
+		//step 2
+		function handleKey(event, status) {
+			var currentController = keyMap[event.keyCode];
+			if(!!currentController){
+				currentController.active = status;
+			}
+		}
+
+
+        // Play music on loop 
+        // Music credits to Alan Walker ;)
+    	var isPlayingMusic = false; 
+        function playMusicNow(){
+        	isPlayingMusic = true;
+	        var audio = new Audio('https://nhacchuong68.com/wp-content/uploads/2019/07/Alan-Walker-Faded-Instrumental-Version.mp3');
+	        audio.addEventListener('ended', function () {
+	            this.currentTime = 0;
+	            this.play();
+	        }, false);
+
+	        audio.play();
+        }
+
+
+
+		document.addEventListener("keydown", function(event) {
+			if(!isPlayingMusic) playMusicNow();
+		    handleKey(event, true);
+		});
+
+		document.addEventListener("keyup", function(event) {
+		    handleKey(event, false);
+		});
+
+
+		function update(){
+			counter++;
+			
+			//Clear all backgroud to black
+           var bgimage= new Image();
+           bgimage.src="data:image/jpeg;base64,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"
+			ctx.drawImage(bgimage,0, 0,520,520);
+
+			//Hovering effect
+			alien.x += -2+Math.random()*4;
+			alien.y += -2+Math.random()*4;
+
+			for(var key in keyMap){
+				var currentController = keyMap[key];
+				if( currentController.active){
+					currentController.onactive();
+				}
+			}
+
+			drawObject(alien);
+			for(var i=0;i<ships.length;i++){
+				drawObject(ships[i]);
+				ships[i].move();				
+				ships[i].fireBullet();
+			}
+
+			drawAndMoveBullets();
+			drawAndMoveFires();
+
+			for(var i=0;i<fires.length;i++){
+				var fire = fires[i]; 
+				for(var j=0; j<ships.length;j++){
+					var ship = ships[j];
+					var x1x2 = (fire.x-ship.x)*(fire.x-ship.x);	
+					var y1y2 = (fire.y-ship.y)*(fire.y-ship.y);	
+					var distance = Math.sqrt( x1x2 + y1y2 ) ;
+					if(distance<ship.width-20){
+						ship.x = (Math.random()*10000000)%WIDTH;
+						ship.speedX = 3+Math.random()*4;
+						ship.y = 0;
+						fire.active = false;
+					}
+					console.log(distance);
+				}
+			}
+		}
+
+		setInterval(update,50);
+
+	</script>
+	
+</body>
+</html>
